@@ -1,0 +1,12 @@
+[package]
+name = "imgix"
+version = "0.1.0"
+authors = ["eric <ericdeansanchez@berkeley.edu>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.33"
+
+[lib]
+name = "imgix"
+path = "src/imgix/lib.rs"
