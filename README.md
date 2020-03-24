@@ -1,5 +1,7 @@
 # Unofficial imgix crate
 
+[![Build Status](https://travis-ci.org/ericdeansanchez/imgix-rs.svg?branch=master)](https://travis-ci.org/ericdeansanchez/imgix-rs)
+
 ## Overview
 
 The imgix-rs crate provides functionality for programmatically constructing imgix-urls.
