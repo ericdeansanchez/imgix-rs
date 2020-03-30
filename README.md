@@ -13,7 +13,7 @@ The imgix-rs crate provides functionality for programmatically constructing imgi
   - [Contents](#contents)
   - [Requirements](#requirements)
   - [Installation](#installation)
-- [Contributing](#contributing)
+  - [Contributing](#contributing)
   - [Prerequisites](#prerequisites)
   - [Clone](#clone)
   - [Build](#build)
@@ -29,7 +29,7 @@ imgix-rs is written in Rust and currently only depends on `clap`.
 
 Coming soon! For now, you can `git clone` this repository.
 
-# Contributing
+## Contributing
 
 Contributions are welcome! No contribution is too small––bug fix, a new feature, feature-request, or a typo fix––all are welcome.
 
