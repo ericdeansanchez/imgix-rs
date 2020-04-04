@@ -2,6 +2,15 @@
 name = "imgix"
 version = "0.1.0"
 authors = ["eric <ericdeansanchez@berkeley.edu>"]
+description = """
+imgix-rs is a crate used for generating urls.
+"""
+documentation = "https://github.com/ericdeansanchez/imgix-rs"
+homepage = "https://github.com/ericdeansanchez/imgix-rs"
+repository = "https://github.com/ericdeansanchez/imgix-rs"
+readme = "README.md"
+license = "MIT"
+autobins = false
 edition = "2018"
 
 [dependencies]
