@@ -10,7 +10,6 @@ homepage = "https://github.com/ericdeansanchez/imgix-rs"
 repository = "https://github.com/ericdeansanchez/imgix-rs"
 readme = "README.md"
 license = "MIT"
-autobins = false
 edition = "2018"
 
 [dependencies]

@@ -6,6 +6,18 @@
 
 The imgix-rs crate provides functionality for programmatically constructing imgix-urls. This crate is a work in progress and **is not currently ready for production use**.
 
+This crate seeks to be explicit and _correct_. It is also currently a side-project (and unofficial). Right now, the project structure looks like this:
+```text
+.
+└──  src
+   ├── bin
+   └── imgix
+```
+
+Where the `bin/` directory represents the cli portion of the project and the `imgix/` directory represents the crate that the cli and users use. The project may be split into separate crates in the future: one for the cli and one for the crate the cli depends on.
+
+For a more detailed description of this project's architecture [read this](Architecture.md).
+
 ## Contents
 
 - [Unofficial imgix crate](#unofficial-imgix-crate)
@@ -19,6 +31,8 @@ The imgix-rs crate provides functionality for programmatically constructing imgi
   - [Build](#build)
   - [Test](#test)
   - [Read](#read)
+    - [Publicly](#publicly)
+    - [Locally](#locally)
   - [Run](#run)
 
 ## Requirements
@@ -65,14 +79,21 @@ Ensure the tests pass on your system (please open an issue if they do not):
 $ cargo test
 ```
 
-## Read 
+## Read
 
-These are the docs you really want. Copy & paste the command below in your 
-terminal. Make sure `--no-deps` is passed otherwise you'll build documentation 
-for all/any dependencies.
+### Publicly 
+The published docs can be found [here](https://docs.rs/imgix/0.1.0/imgix/struct.Url.html) at docs.rs.
+
+### Locally
+Copy & paste the command below in your terminal. Make sure `--no-deps` is passed otherwise you'll build documentation for all/any dependencies.
 
 ```bash
 $ cargo doc --no-deps --open
 ```
 
 ## Run
+Calling `run` without arguments
+```bash
+$ cargo run
+```
+leads to the cli help message.
