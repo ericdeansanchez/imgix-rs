@@ -13,48 +13,44 @@ pub fn cli() -> App {
 /// function writes instructions and code to stdout. The instructions are
 /// to copy the accompanying code and paste it in `.git/hooks/pre-commit`.
 ///
+/// This is a meant to be a convenience, mostly internally. It's easy to
+/// forget to format code before committing. This script is used internally
+/// to say, "at the time of commit, the code was formatted, built, and tested."
+///
 /// This command can be extended to support functionality from passing a
 /// flag to the pre-commit sub-command like so: `imgix pre-commit --write`
 /// This way we avoid writing anything to disk that isn't wanted or warranted.
 pub fn exec() -> io::Result<()> {
     let pre_commit_body = r#"
 Hey! Thanks for using this pre-commit hook! Your future-self thanks you.
-
-In this git repository there's a directory named `.git` and it contains 
-a `hooks` directory that contains executable files:
+In the repository there's a directory named .git/hooks/ and it contains
+executable files:
 
 .git
-├── hooks
+└──hooks
     ├── pre-commit
     └── other-stuff
 
 Create your own `pre-commit` file if one does not already exist:
-
     `$ touch .git/hooks/pre-commit`
 
-Place the following code in .git/hooks/pre-commit. Note: you may have to
-
+Place the following code in .git/hooks/pre-commit.
+Note: you may have to
     `$ chmod +x .git/hooks/pre-commit`
 
 before the file is executable.
 
 #!/bin/sh
 #
-# Pre-commit hooks for imgix-rs.
-# 
-# This hook is meant to be helpful. It is not meant to hinder you or
-# annoy you. Since this is a client side (and not a git-enforced
-# policy), you can delete this at any time, at your own risk.
+# This hook is meant to be helpful and its use is optional. To remove
+# this pre-commit hook, delete it from your .git/hooks/ directory.
 #
-# You can also invoke git commit as:
-#
+# You can also invoke git-commit as:
 # `% git commit --no-verify`
 #
 # This option bypasses the pre-commit and commit-msg hooks.
-
-
-# Prior to committing, do the following:
-
+#
+# Below are the commands that are executed:
 # Build for release.
 cargo build --release
 
@@ -63,7 +59,6 @@ cargo fmt
 
 # Test the repository.
 cargo test 
-
 "#;
     io::stdout().write_all(pre_commit_body.as_bytes())?;
     Ok(())
