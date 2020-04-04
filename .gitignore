@@ -1,3 +1,14 @@
-/target
+# Ignore rustfmt backup files.
 **/*.rs.bk
+
+# Ignore for macOS users.
 .DS_Store
+
+# Ignore settings directories.
+.settings/
+
+# Ignore target directory.
+/target
+
+# Ignore for vscode users.
+.vscode/
