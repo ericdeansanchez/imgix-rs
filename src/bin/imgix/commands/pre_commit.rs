@@ -1,13 +1,13 @@
 use imgix::command_prelude::{App, SubCommand};
 use std::io::{self, Write};
 
-/// Returns the `SubCommand` associated with `pre-commit`. This
+/// Return the `SubCommand` associated with `pre-commit`. This
 /// function can be invoked through the imgix-cli like so:
 pub fn cli() -> App {
     SubCommand::with_name("pre-commit").about("Set up git pre-commit configuration.")
 }
 
-/// Executes the `pre-commit` command.
+/// Execute the `pre-commit` command.
 ///
 /// This function _does not_ modify any directory or file structure. This
 /// function writes instructions and code to stdout. The instructions are

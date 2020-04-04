@@ -2,7 +2,7 @@
 use crate::commands;
 use imgix::command_prelude::*;
 
-/// Builds an `App`. This `App` is comprised of information read from cargo
+/// Build an `App`. This `App` is comprised of information read from cargo
 /// environment variables, a list of settings, and a list of a list of all
 /// supported sub-commands.
 pub fn app() -> App {

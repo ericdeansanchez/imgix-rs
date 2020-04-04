@@ -10,7 +10,7 @@ fn main() -> Result<()> {
     Ok(run(cli::app())?)
 }
 
-/// Executes a cli app. This function parses the command line arguments and
+/// Execute a cli app. This function parses the command line arguments and
 /// maps a given command to _its_ executor.
 fn run(app: clap::App<'static, 'static>) -> Result<()> {
     match app.get_matches().subcommand() {

@@ -71,7 +71,7 @@ impl Default for Url {
 }
 
 impl Url {
-    /// Constructs a new `Url` given a domain.
+    /// Construct a new `Url` given a domain.
     ///
     /// # Panics
     ///
@@ -84,7 +84,7 @@ impl Url {
         }
     }
 
-    /// Sets the domain value (i.e. "example.domain.com").
+    /// Set the domain value (i.e. "example.domain.com").
     ///
     /// # Panics
     ///
@@ -95,7 +95,7 @@ impl Url {
         self
     }
 
-    /// Sets the path value to the image file (i.e. 'image/path.png').
+    /// Set the path value to the image file (i.e. 'image/path.png').
     ///
     /// # Panics
     ///
@@ -106,7 +106,7 @@ impl Url {
         self
     }
 
-    /// Sets an arbitrary key-value parameter (i.e. k='w', v='100'
+    /// Set an arbitrary key-value parameter (i.e. k='w', v='100'
     /// or k='fit', v='crop').
     ///
     /// # Panics
@@ -119,7 +119,7 @@ impl Url {
         self
     }
 
-    /// Sets an arbitrary number of key-value parameters.
+    /// Set an arbitrary number of key-value parameters.
     ///
     /// # Panics
     ///
@@ -133,25 +133,25 @@ impl Url {
         self
     }
 
-    /// Sets the `lib` or library.
+    /// Set the `lib` or library.
     pub fn lib(mut self, l: &str) -> Self {
         self.lib = String::from(l);
         self
     }
 
-    /// Sets the signing `token`.
+    /// Set the signing `token`.
     pub fn token(mut self, token: &str) -> Self {
         self.token = Some(String::from(token));
         self
     }
 
-    // Sets the `scheme` value (i.e. Scheme::Https).
+    // Set the `scheme` value (i.e. Scheme::Https).
     pub fn scheme(mut self, s: Scheme) -> Self {
         self.scheme = s;
         self
     }
 
-    /// Joins the components of a `Url` (i.e. `scheme` + `domain` + `path` +
+    /// Join the components of a `Url` (i.e. `scheme` + `domain` + `path` +
     /// `params`) where the resulting string has the following form:
     ///
     /// {scheme}://{domain}/{path}?{lib}{query}
@@ -162,7 +162,8 @@ impl Url {
     /// # Panics
     ///
     /// This function will panic if the image `path` has not been specified.
-    /// (i.e. if the `path` is `None`).
+    /// (i.e. if the `path` is `None`). This is to ensure that a `Url` is
+    /// joined if it is in a _valid_ state.
     pub fn join(&self) -> String {
         // Join this url, only-if a `path` has been specified.
         match self.path {
@@ -184,7 +185,7 @@ impl Url {
         }
     }
 
-    /// Joins a list of key-value parameter pairs.
+    /// Join a list of key-value parameter pairs.
     ///
     /// # Examples
     ///
