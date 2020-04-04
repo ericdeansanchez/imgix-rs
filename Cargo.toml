@@ -1,6 +1,6 @@
 [package]
 name = "imgix"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["eric <ericdeansanchez@berkeley.edu>"]
 description = """
 imgix-rs is a crate used for generating urls.
