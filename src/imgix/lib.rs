@@ -11,10 +11,10 @@ pub use util::errors::{Error, Result};
 
 /// Primary structure used to generate imgix URLs.
 ///
-/// An imgix URL is comprised of four components:
+/// An *imgix* URL is comprised of four components:
 ///
 /// * scheme - the scheme being used (https by default).
-/// * domain - the imgix domain, i.e. example.imgix.net.
+/// * domain - the domain, i.e. example.domain.net.
 /// * path - the path to the image file.
 /// * query - the query string constructed from `params`.
 ///
@@ -25,14 +25,25 @@ pub use util::errors::{Error, Result};
 /// └─┬─┘                  └──────┬───────┘ └────┬────┘
 /// scheme                      path           params
 /// ```
+///
+/// This structure is meant to be a crate primitive that
+/// crate users _and_ contributors can use to build on. This
+/// is part of the reason why many of the building functions
+/// can panic. They panic to try to ensure invalid urls are
+/// never constructed. This is to provide higher-level structures
+/// certain guarantees about the representation of a `Url`.
 pub struct Url {
     /// The scheme component of a URL, i.e. https, http, etc.
     scheme: Scheme,
-    /// The imgix domain, i.e. example.imgix.net
+    /// The domain, i.e. example.domain.net
     domain: String,
-    /// The imgix library generating the `Url`.
+    /// The library generating the `Url`. If you want to turn on
+    /// analytics, call `ix()` and the library version will be set
+    /// to the value of `"ixlib=rust-0.1.0"`. It helps us help our
+    /// users, but it's _your choice_ to _opt in_. Your code,
+    /// Your choice. What you see is what you get (WYSIWYG).
     lib: String,
-    /// The path to the image file.
+    /// The path to the image file, e.g. "ixlib=rust-0.1.0"
     path: Option<String>,
     /// The parameters used to construct the query string.
     ///
@@ -40,8 +51,8 @@ pub struct Url {
     /// BTreeMap, and BTreeSet for the following reasons:
     ///
     /// * to give users __flexibility__, by accepting a range of inputs
-    /// * to seek __consistency__, by parameters are ordered
-    ///   as they are defined, WYSIWYG
+    /// * to seek __consistency__, by ordering parameters in the order
+    ///   they were defined, (WYSIWYG)
     /// * to give users control
     ///
     /// The query-string is built up during a single iterative pass over this
@@ -55,14 +66,14 @@ pub struct Url {
 }
 
 impl Default for Url {
-    /// By default a imgix URL is created with its `scheme` set
+    /// By default a URL is created with its `scheme` set
     /// to `Scheme::Https` and the `lib` value set to the version
     /// specified in this library's Cargo.toml
     fn default() -> Self {
         Url {
             scheme: Scheme::Https,
             domain: String::new(),
-            lib: constants::lib_version(),
+            lib: "".to_owned(),
             params: vec![],
             path: None,
             token: None,
@@ -84,14 +95,14 @@ impl Url {
         }
     }
 
-    /// Set the domain value (i.e. "example.domain.com").
+    /// Set the domain value (i.e. "example.domain.net").
     ///
     /// # Panics
     ///
-    /// This method panics if the domain `h` is an empty string.
-    pub fn domain(mut self, h: &str) -> Self {
-        assert!(!h.is_empty());
-        self.domain = String::from(h);
+    /// This method panics if passed an empty string.
+    pub fn domain(mut self, d: &str) -> Self {
+        assert!(!d.is_empty());
+        self.domain = String::from(d);
         self
     }
 
@@ -99,19 +110,28 @@ impl Url {
     ///
     /// # Panics
     ///
-    /// This method panics if the path string `r` is empty (i.e. "").
-    pub fn path(mut self, r: &str) -> Self {
-        assert!(!r.is_empty());
-        self.path = Some(String::from(r));
+    /// This method panics if passed an empty string.
+    pub fn path(mut self, p: &str) -> Self {
+        assert!(!p.is_empty());
+        self.path = Some(String::from(p));
         self
     }
 
     /// Set an arbitrary key-value parameter (i.e. k='w', v='100'
     /// or k='fit', v='crop').
     ///
+    /// # Examples
+    /// ```
+    /// use imgix::Url;
+    /// let url = Url::new("example.domain.net").param("w", "320").path("test").lib("");
+    /// let right = "https://example.domain.net/test?w=320";
+    /// assert_eq!(url.join(), "https://example.domain.net/test?w=320")
+    /// ```
+    ///
     /// # Panics
     ///
-    /// This method panics if the key `k` or the value `v` is an empty string.
+    /// This method panics if any key `k` or any value `v` is an empty string,
+    /// where `k` and `v` represent string literals.
     pub fn param(mut self, k: &'static str, v: &'static str) -> Self {
         assert!(!k.is_empty());
         assert!(!v.is_empty());
@@ -120,6 +140,20 @@ impl Url {
     }
 
     /// Set an arbitrary number of key-value parameters.
+    ///
+    /// # Examples
+    /// ```
+    /// use imgix::Url;
+    ///
+    /// let url = Url::new("example.domain.net")
+    ///     .path("test").lib("")
+    ///     .params(&[("w", "320"),
+    ///     ("h", "640"),
+    ///     ("fit", "crop")]);
+    ///
+    /// let right = "https://example.domain.net/test?w=320&h=640&fit=crop";
+    /// assert_eq!(url.join(), right);
+    /// ```
     ///
     /// # Panics
     ///
@@ -134,20 +168,36 @@ impl Url {
     }
 
     /// Set the `lib` or library.
+    ///
+    /// The `Url`'s `lib` value can be set to any `String` by passing
+    /// the desired string literal. If the `lib` is a valid ix-lib
+    /// parameter if will be considered on the server. However, if
+    /// an invalid lib-parameter is passed, e.g. "rust-is-cool", it
+    /// will be ignored (appreciated ;) but ignored).
     pub fn lib(mut self, l: &str) -> Self {
         self.lib = String::from(l);
         self
     }
 
-    /// Set the signing `token`.
-    pub fn token(mut self, token: &str) -> Self {
-        self.token = Some(String::from(token));
+    /// Set the signing token.
+    pub fn token(mut self, t: &str) -> Self {
+        self.token = Some(String::from(t));
         self
     }
 
-    // Set the `scheme` value (i.e. Scheme::Https).
+    // Set the `scheme` value (i.e. `Scheme::Https`).
     pub fn scheme(mut self, s: Scheme) -> Self {
         self.scheme = s;
+        self
+    }
+
+    // Set the library version to this crate's current `lib_version()`.
+    // In the official imgix docs the `ixlib` parameter is used for
+    // _diagnostic purposes_. It helps us help our users and customers,
+    // but it's _your choice_ to _opt in_. Your code, Your choice.
+    // What you see is what you get (WYSIWYG).
+    pub fn ix(mut self) -> Self {
+        self.lib = constants::lib_version();
         self
     }
 
@@ -169,15 +219,39 @@ impl Url {
         match self.path {
             Some(ref path) => {
                 let query = Self::join_params(&self.params);
-
-                format!(
-                    "{scheme}://{domain}/{path}?{lib}{query}",
-                    scheme = self.scheme,
-                    domain = self.domain,
-                    path = path,
-                    lib = self.lib,
-                    query = query,
-                )
+                match (&self.lib.is_empty(), &self.params.is_empty()) {
+                    // path and lib and query
+                    (false, false) => format!(
+                        "{scheme}://{domain}/{path}?{lib}{query}",
+                        scheme = self.scheme,
+                        domain = self.domain,
+                        path = path,
+                        lib = self.lib,
+                        query = query,
+                    ),
+                    // no query params
+                    (false, true) => format!(
+                        "{scheme}://{domain}/{path}",
+                        scheme = self.scheme,
+                        domain = self.domain,
+                        path = path,
+                    ),
+                    // no lib
+                    (true, false) => format!(
+                        "{scheme}://{domain}/{path}?{query}",
+                        scheme = self.scheme,
+                        domain = self.domain,
+                        path = path,
+                        query = query
+                    ),
+                    // no query params, no lib
+                    (true, true) => format!(
+                        "{scheme}://{domain}/{path}",
+                        scheme = self.scheme,
+                        domain = self.domain,
+                        path = path,
+                    ),
+                }
             }
             None => {
                 panic!("failed: cannot `Url::join` when `path` is `None`.");
@@ -222,6 +296,19 @@ impl Url {
     }
 }
 
+/// Primary value for expressing which scheme a url uses.
+///
+/// This is an enum to define and enforce the crate semantics of what
+/// it _means_ for a url to be valid for our use-case. A url can be
+/// in one of two _states_: it either uses https or it uses http. While
+/// this can be achieved by toggling https on and off via a boolean value,
+/// a boolean value weakens the semantics and constrains the range of possible
+/// schemes that can be used in the future.
+///
+/// Using `Scheme::Https` is also more explicit than saying `url.https(true)`,
+/// it also has the added benefit of being _discoverable_. When usage is
+/// `url.scheme(Scheme::...)`, the range of possible schemes can be discovered
+/// by IDE code completion tools.
 #[derive(Debug, PartialEq)]
 pub enum Scheme {
     Https,
@@ -258,20 +345,19 @@ mod test {
     }
 
     #[test]
-    fn test_basic_imgix_url() {
+    fn test_basic_url() {
         let right = format!(
-            "{scheme}://{domain}/{path}?{ixlib}",
+            "{scheme}://{domain}/{path}",
             scheme = HTTPS,
             domain = HOST,
             path = PNG_PATH,
-            ixlib = constants::lib_version(),
         );
         let url = Url::new(HOST).path(PNG_PATH);
 
         // Test all fields.
         assert_eq!(url.scheme, Scheme::Https);
         assert_eq!(url.domain, HOST);
-        assert_eq!(url.lib, constants::lib_version());
+        assert_eq!(url.lib, "".to_owned());
         assert_eq!(url.path, Some(String::from(PNG_PATH)));
         assert!(url.params.is_empty());
         assert!(url.token.is_none());
@@ -281,13 +367,12 @@ mod test {
     }
 
     #[test]
-    fn test_basic_imgix_url_scheme() {
+    fn test_basic_url_scheme() {
         let right = format!(
-            "{scheme}://{domain}/{path}?{ixlib}",
+            "{scheme}://{domain}/{path}",
             scheme = HTTP,
             domain = HOST,
             path = PNG_PATH,
-            ixlib = constants::lib_version()
         );
 
         // Construct a url with http scheme.
@@ -296,7 +381,7 @@ mod test {
 
         assert_eq!(url.scheme, Scheme::Http);
         assert_eq!(url.domain, HOST);
-        assert_eq!(url.lib, constants::lib_version());
+        assert_eq!(url.lib, "".to_owned());
         assert_eq!(url.path, Some(String::from(PNG_PATH)));
         assert!(url.params.is_empty());
         assert_eq!(url.join(), right);

@@ -4,7 +4,7 @@
 
 ## Overview
 
-The imgix-rs crate provides functionality for programmatically constructing imgix-urls.
+The imgix-rs crate provides functionality for programmatically constructing imgix-urls. This crate is a work in progress and **is not currently ready for production use**.
 
 ## Contents
 
