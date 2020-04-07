@@ -72,7 +72,7 @@ impl Default for Url {
     fn default() -> Self {
         Url {
             scheme: Scheme::Https,
-            domain: String::new(),
+            domain: "".to_owned(),
             lib: "".to_owned(),
             params: vec![],
             path: None,
@@ -167,19 +167,46 @@ impl Url {
         self
     }
 
-    /// Set the `lib` or library.
+    /// Set the library version explicitly, see `Url::ix()` for the
+    /// implicit default.
     ///
     /// The `Url`'s `lib` value can be set to any `String` by passing
     /// the desired string literal. If the `lib` is a valid ix-lib
     /// parameter if will be considered on the server. However, if
     /// an invalid lib-parameter is passed, e.g. "rust-is-cool", it
     /// will be ignored (appreciated ;) but ignored).
+    ///
+    /// Examples
+    /// ```
+    /// use imgix::{constants::lib_version, Scheme, Url};
+    ///
+    /// const DOMAIN: &str = "example.domain.net";
+    /// const PATH: &str = "image.png";
+    ///
+    /// let url = Url::new(DOMAIN)
+    ///     .lib(&lib_version())
+    ///     .path("image.png");
+    ///
+    /// let right = format!(
+    ///     "{scheme}://{domain}/{path}?{lib}",
+    ///     scheme = Scheme::Https,
+    ///     domain = DOMAIN,
+    ///     path = PATH,
+    ///     lib = lib_version()
+    /// );
+    ///
+    /// assert_eq!(url.join(), right);
+    ///
+    /// let url = url.lib("rust-is-cool");
+    /// assert_ne!(url.join(), right);
+    /// ```
     pub fn lib(mut self, l: &str) -> Self {
         self.lib = String::from(l);
         self
     }
 
     /// Set the signing token.
+    /// TODO: Test token post md5 implementation.
     pub fn token(mut self, t: &str) -> Self {
         self.token = Some(String::from(t));
         self
@@ -219,24 +246,29 @@ impl Url {
         match self.path {
             Some(ref path) => {
                 let query = Self::join_params(&self.params);
-                match (&self.lib.is_empty(), &self.params.is_empty()) {
-                    // path and lib and query
+                // If we make it here then the following is true:
+                // * a path has been assigned and is not `None`
+                // * a query string was generated successfully and
+                //   is either empty or non-empty.
+                match (&self.lib.is_empty(), &query.is_empty()) {
+                    // All present, no empty fields, construct full url.
                     (false, false) => format!(
-                        "{scheme}://{domain}/{path}?{lib}{query}",
+                        "{scheme}://{domain}/{path}?{lib}&{query}",
                         scheme = self.scheme,
                         domain = self.domain,
                         path = path,
                         lib = self.lib,
                         query = query,
                     ),
-                    // no query params
+                    // Query string is empty, but lib is non-empty.
                     (false, true) => format!(
-                        "{scheme}://{domain}/{path}",
+                        "{scheme}://{domain}/{path}?{lib}",
                         scheme = self.scheme,
                         domain = self.domain,
+                        lib = self.lib,
                         path = path,
                     ),
-                    // no lib
+                    // Lib is empty, but query is non-empty.
                     (true, false) => format!(
                         "{scheme}://{domain}/{path}?{query}",
                         scheme = self.scheme,
@@ -244,7 +276,7 @@ impl Url {
                         path = path,
                         query = query
                     ),
-                    // no query params, no lib
+                    // Both lib and query strings are empty.
                     (true, true) => format!(
                         "{scheme}://{domain}/{path}",
                         scheme = self.scheme,
@@ -329,8 +361,11 @@ mod test {
     use super::*;
     const HTTPS: &str = "https";
     const HTTP: &str = "http";
-    const HOST: &str = "test.domain.com";
-    const PNG_PATH: &str = "test-image.png";
+    const DOMAIN: &str = "test.domain.com";
+    const DOMAIN2: &str = "test.domain2.com";
+    const PNG_PATH: &str = "images/test-image.png";
+    const JPG_PATH: &str = "images/test-image.jpg";
+    const BASIC_PARAMS: &[(&str, &str)] = &[("w", "640"), ("h", "720"), ("fit", "crop")];
 
     #[test]
     fn test_join_params() {
@@ -345,49 +380,155 @@ mod test {
     }
 
     #[test]
-    fn test_basic_url() {
+    fn test_default_url() {
+        // Test the default representation of a `Url`.
+        let default = Url::default();
+        assert_eq!(default.scheme, Scheme::Https);
+        assert_eq!(default.domain, "".to_owned());
+        assert_eq!(default.lib, "".to_owned());
+        assert_eq!(default.params, vec![]);
+        assert_eq!(default.path, None);
+        assert_eq!(default.token, None);
+    }
+
+    #[test]
+    fn test_url_new() {
+        let url = Url::new(DOMAIN);
+        assert_eq!(url.domain, DOMAIN);
+
+        let url = Url::new(DOMAIN2);
+        assert_ne!(url.domain, "".to_owned());
+    }
+
+    #[test]
+    fn test_url_domain() {
+        let url = Url::new(DOMAIN);
+        assert_ne!(url.domain, DOMAIN2);
+
+        let url = url.domain(DOMAIN2);
+        assert_eq!(url.domain, DOMAIN2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_construct_empty_domain() {
+        let _ = Url::new("");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_assign_empty_domain() {
+        let _ = Url::default().domain("");
+    }
+
+    #[test]
+    fn test_assign_path() {
+        let url = Url::default().path(PNG_PATH);
+        assert_eq!(url.path, Some(PNG_PATH.to_owned()));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_assign_empty_path() {
+        let _ = Url::default().path("");
+    }
+
+    #[test]
+    fn test_assign_param() {
+        const K: &str = "w";
+        const V: &str = "320";
+        let url = Url::default().param(K, V);
+        for (k, v) in url.params.iter() {
+            assert_eq!(*k, K);
+            assert_eq!(*v, V);
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_assign_empty_key_param() {
+        const V: &str = "320";
+        const KE: &str = "";
+        let _ = Url::default().param(KE, V);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_assign_empty_value_param() {
+        const VE: &str = "";
+        const K: &str = "w";
+        let _ = Url::default().param(K, VE);
+    }
+
+    #[test]
+    fn test_assign_params() {
+        let url = Url::default().params(BASIC_PARAMS);
+        // Test params assigned correctly.
+        for (left, right) in url.params.iter().zip(BASIC_PARAMS.iter()) {
+            assert_eq!(left.0, right.0);
+            assert_eq!(left.1, right.1);
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_assign_params_mismatch() {
+        // This assertion is necessary for this test's validity.
+        // If the slices were of length 3 and length 4, and only differed
+        // in the 4th position, we would not know it as `zip` only zips
+        // pairs––the 4th item is discarded (only 3 pairs would be made).
+        assert_eq!(BASIC_PARAMS.len(), HAS_AR.len());
+
+        const HAS_AR: &[(&str, &str)] = &[("w", "640"), ("h", "720"), ("ar", "4:3")];
+        let url = Url::default().params(BASIC_PARAMS);
+        // Test params assigned correctly.
+        for (left, right) in url.params.iter().zip(HAS_AR.iter()) {
+            // This test is designed to fail on the third iteration.
+            assert_eq!(left.0, right.0);
+            assert_eq!(left.1, right.1);
+        }
+    }
+
+    #[test]
+    fn test_url_png_src() {
+        // Test a `Url` is constructed correctly.
         let right = format!(
             "{scheme}://{domain}/{path}",
             scheme = HTTPS,
-            domain = HOST,
+            domain = DOMAIN,
             path = PNG_PATH,
         );
-        let url = Url::new(HOST).path(PNG_PATH);
+
+        let url = Url::new(DOMAIN).path(PNG_PATH);
 
         // Test all fields.
         assert_eq!(url.scheme, Scheme::Https);
-        assert_eq!(url.domain, HOST);
+        assert_eq!(url.domain, DOMAIN);
         assert_eq!(url.lib, "".to_owned());
         assert_eq!(url.path, Some(String::from(PNG_PATH)));
         assert!(url.params.is_empty());
         assert!(url.token.is_none());
-
-        // Test the joined url.
         assert_eq!(url.join(), right);
     }
 
     #[test]
-    fn test_basic_url_scheme() {
+    fn test_url_jpg_src() {
+        // Test a `Url` is constructed correctly.
         let right = format!(
             "{scheme}://{domain}/{path}",
             scheme = HTTP,
-            domain = HOST,
-            path = PNG_PATH,
+            domain = DOMAIN,
+            path = JPG_PATH,
         );
 
-        // Construct a url with http scheme.
-        // Note: https is the default scheme.
-        let url = Url::new(HOST).path(PNG_PATH).scheme(Scheme::Http);
+        let url = Url::new(DOMAIN).path(JPG_PATH).scheme(Scheme::Http);
 
+        // Test all fields.
         assert_eq!(url.scheme, Scheme::Http);
-        assert_eq!(url.domain, HOST);
+        assert_eq!(url.domain, DOMAIN);
         assert_eq!(url.lib, "".to_owned());
-        assert_eq!(url.path, Some(String::from(PNG_PATH)));
+        assert_eq!(url.path, Some(String::from(JPG_PATH)));
         assert!(url.params.is_empty());
         assert_eq!(url.join(), right);
-
-        // Now switch back to https.
-        let url = url.scheme(Scheme::Https);
-        assert_eq!(url.scheme, Scheme::Https);
     }
 }

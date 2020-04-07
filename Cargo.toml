@@ -12,9 +12,9 @@ readme = "README.md"
 license = "MIT"
 edition = "2018"
 
-[dependencies]
-clap = "2.33"
-
 [lib]
 name = "imgix"
 path = "src/imgix/lib.rs"
+
+[dependencies]
+clap = "2.33"
