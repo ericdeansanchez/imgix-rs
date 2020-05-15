@@ -26,6 +26,7 @@ use super::{constants, validate, Error};
 /// can panic. They panic to try to ensure invalid urls are
 /// never constructed. This is to provide higher-level structures
 /// certain guarantees about the representation of a `Url`.
+#[derive(Debug)]
 pub struct Url {
     /// The scheme component of a URL, i.e. https, http, etc.
     scheme: Scheme,
@@ -81,7 +82,7 @@ impl Url {
     /// # Panics
     ///
     /// This constructor will fail if the `domain` is an empty string.
-    pub fn new(domain: &'static str) -> Self {
+    pub fn new(domain: &str) -> Self {
         match validate::domain(&domain) {
             Ok(()) => Url {
                 domain: String::from(domain),
@@ -185,7 +186,7 @@ impl Url {
     /// Examples
     /// ```
     /// use imgix::{lib_version, Scheme, Url};
-    /// 
+    ///
     /// const DOMAIN: &str = "example.domain.net";
     /// const PATH: &str = "image.png";
     ///
@@ -337,6 +338,44 @@ impl Url {
             it += 1;
         }
         return result;
+    }
+
+    pub fn get_scheme(&self) -> &Scheme {
+        &self.scheme
+    }
+
+    pub fn get_domain(&self) -> &str {
+        &self.domain
+    }
+
+    pub fn get_lib(&self) -> &str {
+        &self.lib
+    }
+
+    pub fn get_params(&self) -> &[(&'static str, &'static str)] {
+        &self.params
+    }
+
+    pub fn get_path(&self) -> &str {
+        match &self.path {
+            Some(p) => &p,
+            None => "",
+        }
+    }
+
+    pub fn get_token(&self) -> &str {
+        match &self.token {
+            Some(t) => &t,
+            None => "",
+        }
+    }
+
+    pub fn has_params(&self) -> bool {
+        self.params.len() > 0usize
+    }
+
+    pub fn to_srcset(&self) -> String {
+        unimplemented!()
     }
 }
 

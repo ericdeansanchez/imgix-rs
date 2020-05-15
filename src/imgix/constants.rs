@@ -16,12 +16,14 @@ pub const IMAGE_MAX_WIDTH: f32 = 8192.0;
 pub const SRCSET_WIDTH_TOLERANCE: f32 = 8.0;
 
 pub const SRCSET_TARGET_WIDTHS: [u32; 31] = [
-    100, 116, 134, 156, 182, 210, 244, 282, 328, 380, 442, 512, 594, 688, 798, 926, 1074, 1246,
-    1446, 1678, 1946, 2258, 2618, 3038, 3524, 4088, 4742, 5500, 6380, 7400, 8192,
+    100, 116, 135, 156, 181, 210, 244, 283, 328, 380, 441, 512, 594, 689, 799, 927, 1075, 1247,
+    1446, 1678, 1946, 2257, 2619, 3038, 3524, 4087, 4741, 5500, 6380, 7401, 8192,
 ];
 
 /// The default density pixel ratios (dpr).
 pub const SRCSET_TARGET_DPR_RATIOS: [u32; 5] = [1, 2, 3, 4, 5];
+
+pub const SRCSET_DPR_QUALITIES: [u32; 5] = [75, 50, 35, 23, 20];
 
 pub fn lib_version() -> String {
     return format!("rust={}", env!("CARGO_PKG_VERSION"));
@@ -35,15 +37,9 @@ mod test {
     fn test_srcset_target_widths() {
         assert_eq!(SRCSET_TARGET_WIDTHS.len(), 31);
         let mut prev = 100f32;
-
-        let make_even_integer = |value: f32| -> u32 {
-            let half = value / 2.0;
-            return (2.0 * half.round()) as u32;
-        };
-
         let mut index = 0usize;
         while prev <= IMAGE_MAX_WIDTH && index < SRCSET_TARGET_WIDTHS.len() {
-            assert_eq!(SRCSET_TARGET_WIDTHS[index], make_even_integer(prev));
+            assert_eq!(SRCSET_TARGET_WIDTHS[index], prev.round() as u32);
             index += 1;
             prev *= 1.0 + (SRCSET_WIDTH_TOLERANCE / 100.0) * 2.0;
         }
